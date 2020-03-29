@@ -15,64 +15,83 @@ class PostTests extends TestCase
      * @test
      */
 
-     public function it_should_display_all_posts()
-     {
-         $post = factory(Posts::class)->create();
-         $this->get('/')
+    public function every_one_should_be_able_to_view_blog_posts()
+    {
+        $post = factory(Posts::class)->create();
+        // $post = factory(Posts::class,['title'=>'The Title'])->create();
+        $this->get('/')
+            ->assertStatus(200)
+            ->assertSeeText($post->title,'The Title');
+    }
+
+    /**
+     * @test
+     */
+    public function users_should_be_able_to_read_a_blog()
+    {
+        $post = factory(Posts::class)->create();
+        $this->get('posts/'.$post->id)
             ->assertOk()
-            ->assertSeeText($post->title)
-            ->assertViewIs('welcome');
-     }
+            ->assertViewIs('post.show')
+            ->assertOk();
 
-     /**
-      * @test
-      */
-     public function it_should_deny_unauthorized_users_access_to_create_post()
+    }
+
+
+    /**
+     * @test
+     */
+
+
+     public function users_should_be_able_to_create_a_blog_post()
      {
-         # code...
-         $data = [
-            'title' => 'This is a test title',
-            'body' => 'lorem ipsum delumn aslkd lajdasld alskdjasd alsdjaslda lwuoer chelkdu weldjkfw lkujfkows oljasidoiwiket',
-            'user_id' => 1
-        ];
-         $this->post('/',$data)->assertStatus(500);
-     }
+         $post = factory(Posts::class)->make();
 
-     public function it_should_throw_a_validation_error_when_creating_post()
-     {
-         # code...
-     }
+         $this->post('/posts',$post->toArray())->assertRedirect('/');
+        $this->assertDatabaseHas('posts',$post->toArray());
 
-     /**
-      * @test
-      */
-     public function it_should_not_create_a_post()
-     {
-        $data = [
-            'title' => 'This is a test title',
-            'body' => 'lorem ipsum delumn aslkd lajdasld alskdjasd alsdjaslda lwuoer chelkdu weldjkfw lkujfkows oljasidoiwiket',
-        ];
+        $this->get('/')
+            ->assertSeeText($post->title);
+            // assert that the database has the data in it;
 
-        $this->be(factory(User::class)->create())
-            ->post('/',$data)
-            ->assertStatus(500);
      }
 
 
      /** @test */
-     public function it_should_create_a_post()
-     {
-         # code...
-         $data = [
-             'title' => 'This is a test title',
-             'body' => 'lorem ipsum delumn aslkd lajdasld alskdjasd alsdjaslda lwuoer chelkdu weldjkfw lkujfkows oljasidoiwiket',
-             'user_id' => 1
-         ];
 
-         $this->be(factory(User::class)->create())
-         ->post('/',$data)
-         ->assertCreated()
-         ->assertJson($data);
+     public function a_user_should_be_able_to_delete_his_own_post()
+     {
+         $post = factory(Posts::class,['user_id' => 1])->create();
+         $this->be($post->user);
+
+         $this->assertDatabaseHas('posts',['title' => $post->title, 'body' => $post->body]);
+         $this->delete('posts/'.$post->id)
+            ->assertOk();
+
+        $this->assertDatabaseMissing('posts',['title' => $post->title, 'body' => $post->body]);
+        $this->get('/home')
+            ->assertDontSeeText($post->title);
      }
+
+
+     /** @test */
+     public function a_user_should_not_be_able_to_delete_a_post_that_is_not_his(){
+         $this->be(factory(User::class,['user_id' => 88])->create());
+
+        $post = factory(Posts::class,['user_id' => 1])->create();
+        $this->assertDatabaseHas('posts',['title' => $post->title, 'body' => $post->body]);
+
+         $this->delete('posts/'.$post->id)
+            ->assertSessionHas('error','Not Authorized')
+            ->assertRedirect('/posts');
+
+        $this->get('/posts')
+            ->assertSeeText($post->title);
+
+        $this->assertDatabaseHas('posts',['title' => $post->title, 'body' => $post->body, 'id' => $post->id]);
+     }
+
+
+
 
 }

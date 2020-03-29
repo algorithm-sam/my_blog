@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Posts;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\UnauthorizedException;
 
 class PostsController extends Controller
 {
@@ -16,7 +17,7 @@ class PostsController extends Controller
 
      public function __construct()
      {
-         $this->middleware('auth')->only(['create']);
+        //  $this->middleware('auth')->only(['create']);
      }
     public function index()
     {
@@ -41,7 +42,8 @@ class PostsController extends Controller
         //     'user_id' => 'required'
         // ]);
 
-        return Posts::create($request->all());
+         Posts::create($request->all());
+         return back();
 
     }
 
@@ -62,9 +64,11 @@ class PostsController extends Controller
      * @param  \App\Posts  $posts
      * @return \Illuminate\Http\Response
      */
-    public function show(Posts $posts)
+    public function show(Posts $post)
     {
         //
+
+        return view('post.show',compact('post'));
     }
 
     /**
@@ -96,8 +100,17 @@ class PostsController extends Controller
      * @param  \App\Posts  $posts
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Posts $posts)
+    public function destroy(Posts $post)
     {
         //
+
+        if($post->user_id == auth()->id()){
+            return $post->delete();
+
+        }
+        return redirect('/posts')->with('error','Not Authorized');
+
+
+
     }
 }
