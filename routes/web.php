@@ -15,8 +15,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', 'PostsController@index');
-Route::post('/', 'PostsController@create');
+Route::post('/posts', 'PostsController@create');
+Route::get('posts/{post}','PostsController@show');
+Route::delete('posts/{post}','PostsController@destroy')->middleware('auth');
+Route::get('/protected','HomeController@protected')->middleware('auth');
+// Route::get('{post}','PostsController@show');
+
+
+Route::get('/home', 'HomeController@index')->name('home');
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');

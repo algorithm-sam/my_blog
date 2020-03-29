@@ -14,10 +14,28 @@ class CommentTest extends TestCase
      *
      * @return void
      */
-    public function testExample()
+    public function a_logged_in_user_should_be_able_to_comment()
     {
-        $response = $this->get('/');
 
-        $response->assertStatus(200);
     }
+
+    public function an_unauthenticated_user_should_not_be_able_to_comment(){
+
+    }
+
+    public function a_user_can_delete_his_own_comment()
+    {
+        # code...
+    }
+
+    public function a_user_can_not_delete_another_users_comment()
+    {
+        # code...
+    }
+    public function a_comment_belongs_to_a_single_post()
+    {
+        # code...
+    }
+
+
 }
